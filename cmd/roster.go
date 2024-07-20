@@ -6,9 +6,49 @@ package cmd
 import (
 	"fmt"
 
+	wapi "github.com/SabienNguyen/WAPI"
+	"github.com/charmbracelet/bubbles/table"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
-	"github.com/tlowerison/nbastats"
 )
+
+var baseStyle = lipgloss.NewStyle().
+	BorderStyle(lipgloss.NormalBorder()).
+	BorderForeground(lipgloss.Color("240"))
+
+type model struct {
+	table table.Model
+}
+
+func (m model) Init() tea.Cmd { return nil }
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc":
+			if m.table.Focused() {
+				m.table.Blur()
+			} else {
+				m.table.Focus()
+			}
+		case "q", "ctrl+c":
+			return m, tea.Quit
+		case "enter":
+			return m, tea.Batch(
+				tea.Printf("Selected player: %s", m.table.SelectedRow()[0]),
+			)
+		}
+	}
+	m.table, cmd = m.table.Update(msg)
+	return m, cmd
+}
+
+func (m model) View() string {
+	return baseStyle.Render(m.table.View()) + "\n"
+}
 
 // rosterCmd represents the roster command
 var rosterCmd = &cobra.Command{
@@ -21,14 +61,62 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := nbastats.NewClient()
-		team := "1610612744"
-		season := "2020-21"
-		data, err := client.Lineups(&nbastats.LineupsFields{TeamID: &team, Season: &season})
+		roster, err := wapi.GetRoster()
+
 		if err != nil {
-			fmt.Println(err.Error())
-		} else {
-			fmt.Println(data)
+			fmt.Printf("expected roster got %s", roster)
+		}
+
+		columns := []table.Column{
+			{Title: "Name", Width: 20},
+			{Title: "Number", Width: 6},
+			{Title: "Position", Width: 8},
+			{Title: "Height", Width: 8},
+			{Title: "Weight", Width: 8},
+			{Title: "Birthdate", Width: 12},
+			{Title: "Age", Width: 6},
+			{Title: "Experience", Width: 12},
+			{Title: "School", Width: 16},
+			{Title: "Aquired", Width: 32},
+		}
+
+		rows := make([]table.Row, len(roster))
+		for i, p := range roster {
+			rows[i] = table.Row{
+				p.Name,
+				p.Number,
+				p.Position,
+				p.Height,
+				p.Weight,
+				p.Birthdate,
+				p.Age,
+				p.Experience,
+				p.School,
+				p.Aquired,
+			}
+		}
+
+		t := table.New(
+			table.WithColumns(columns),
+			table.WithRows(rows),
+			table.WithFocused(true),
+			table.WithHeight(12),
+		)
+
+		s := table.DefaultStyles()
+		s.Header = s.Header.
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderBottomForeground(lipgloss.Color("240")).
+			BorderBottom(true).Bold(false)
+		s.Selected = s.Selected.
+			Foreground(lipgloss.Color("229")).
+			Background(lipgloss.Color("57")).
+			Bold(false)
+		t.SetStyles(s)
+
+		m := model{t}
+		if _, err := tea.NewProgram(m).Run(); err != nil {
+			fmt.Printf("Error running program: %s\n", err)
 		}
 	},
 }
