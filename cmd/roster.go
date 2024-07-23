@@ -1,10 +1,12 @@
 /*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
+Copyright © 2024 Sabien Nguyen Sabiennguyen@gmail.com
 */
 package cmd
 
 import (
 	"fmt"
+
+	"warriors-cli/ui"
 
 	wapi "github.com/SabienNguyen/WAPI"
 	"github.com/charmbracelet/bubbles/table"
@@ -13,53 +15,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var baseStyle = lipgloss.NewStyle().
-	BorderStyle(lipgloss.NormalBorder()).
-	BorderForeground(lipgloss.Color("240"))
-
-type model struct {
-	table table.Model
-}
-
-func (m model) Init() tea.Cmd { return nil }
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "esc":
-			if m.table.Focused() {
-				m.table.Blur()
-			} else {
-				m.table.Focus()
-			}
-		case "q", "ctrl+c":
-			return m, tea.Quit
-		case "enter":
-			return m, tea.Batch(
-				tea.Printf("Selected player: %s", m.table.SelectedRow()[0]),
-			)
-		}
-	}
-	m.table, cmd = m.table.Update(msg)
-	return m, cmd
-}
-
-func (m model) View() string {
-	return baseStyle.Render(m.table.View()) + "\n"
-}
-
 // rosterCmd represents the roster command
 var rosterCmd = &cobra.Command{
 	Use:   "roster",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Shows the current Warriors player roster",
+	Long: `This command shows the current Warriors player roster. 
+	When the roster is shown, the user can move up and 
+	down the list using the arrow keys. Various information
+	about the player is shown on the table. `,
 	Run: func(cmd *cobra.Command, args []string) {
 		roster, err := wapi.GetRoster()
 
@@ -105,16 +68,16 @@ to quickly create a Cobra application.`,
 
 		s := table.DefaultStyles()
 		s.Header = s.Header.
-			BorderStyle(lipgloss.NormalBorder()).
-			BorderBottomForeground(lipgloss.Color("240")).
+			BorderStyle(lipgloss.RoundedBorder()).
+			BorderBottomForeground(lipgloss.Color("#ffba00")).
 			BorderBottom(true).Bold(false)
 		s.Selected = s.Selected.
 			Foreground(lipgloss.Color("229")).
-			Background(lipgloss.Color("57")).
+			Background(lipgloss.Color("#00408d")).
 			Bold(false)
 		t.SetStyles(s)
 
-		m := model{t}
+		m := ui.Model{Table: t}
 		if _, err := tea.NewProgram(m).Run(); err != nil {
 			fmt.Printf("Error running program: %s\n", err)
 		}
