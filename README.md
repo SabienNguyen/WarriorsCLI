@@ -20,6 +20,10 @@ warriors-cli roster
 warriors-cli roster
 ```
 Use the arrows keys to naviage the tables
+## Examples
+![image](https://github.com/user-attachments/assets/1fe4f060-6aa1-4329-b9dd-dfa54834b3a3)
+![image](https://github.com/user-attachments/assets/8159c713-f4c6-499b-a6cd-353ea3a14cfb)
+
 ## Tools used to create this project
 * Built in golang
 * The CLI is built using cobra-cli
