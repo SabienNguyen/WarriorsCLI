@@ -24,3 +24,4 @@ Use the arrows keys to naviage the tables
 * Built in golang
 * The CLI is built using cobra-cli
 * TUI is bubble tea and lipgloss
+* My custom [WAPI](https://github.com/SabienNguyen/WAPI) is used to get team information!
